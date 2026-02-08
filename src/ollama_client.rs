@@ -1,5 +1,5 @@
 use anyhow::Result;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 pub struct OllamaClient {
     base_url: String,
@@ -14,6 +14,12 @@ struct ModelList {
 #[derive(Deserialize)]
 struct ModelInfo {
     name: String,
+}
+
+#[derive(Serialize)]
+struct PullModelRequest {
+    name: String,
+    stream: bool,
 }
 
 impl OllamaClient {
@@ -34,6 +40,31 @@ impl OllamaClient {
 
         let list: ModelList = response.json().await?;
         Ok(list.models.iter().any(|m| m.name == model_name))
+    }
+
+    pub async fn pull_model(&self, model_name: &str) -> Result<()> {
+        let url = format!("{}/api/pull", self.base_url);
+        let request = PullModelRequest {
+            name: model_name.to_string(),
+            stream: false,
+        };
+
+        let response = self.http_client.post(&url).json(&request).send().await?;
+
+        if !response.status().is_success() {
+            return Err(anyhow::anyhow!("Failed to pull model: {}", response.status()));
+        }
+
+        Ok(())
+    }
+
+    pub async fn ensure_model_exists(&self, model_name: &str) -> Result<()> {
+        if !self.check_model_exists(model_name).await? {
+            println!("Model {} missing, pulling...", model_name);
+            self.pull_model(model_name).await?;
+            println!("Model {} pulled successfully.", model_name);
+        }
+        Ok(())
     }
 }
 
@@ -67,5 +98,21 @@ mod tests {
 
         let missing = client.check_model_exists("gpt-4").await.unwrap();
         assert!(!missing);
+    }
+
+    #[tokio::test]
+    async fn test_pull_model() {
+        let mock_server = MockServer::start().await;
+
+        Mock::given(method("POST"))
+            .and(path("/api/pull"))
+            .and(wiremock::matchers::body_json(json!({"name": "prompt-guard:latest", "stream": false})))
+            .respond_with(ResponseTemplate::new(200).set_body_json(json!({"status": "success"})))
+            .mount(&mock_server)
+            .await;
+
+        let client = OllamaClient::new(&mock_server.uri());
+        let result = client.pull_model("prompt-guard:latest").await;
+        assert!(result.is_ok());
     }
 }
