@@ -2,11 +2,14 @@ services:
   molt-bot:
     build: .
     container_name: molt-bot
+    ports:
+      - "3005:3005"
     depends_on:
       - vault
     environment:
       - VAULT_ADDR=http://vault:8200
       - VAULT_TOKEN=root
+      - OLLAMA_URL=http://192.168.68.68:11434
     read_only: true
     tmpfs:
       - /tmp

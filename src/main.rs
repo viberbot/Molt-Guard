@@ -10,7 +10,7 @@ async fn main() {
     let app = create_app();
 
     // Define the address to listen on
-    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 3005));
     println!("Listening on {}", addr);
 
     // Start the server
