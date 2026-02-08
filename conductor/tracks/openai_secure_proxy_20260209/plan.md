@@ -34,7 +34,7 @@ This plan outlines the steps to build the HTTP proxy layer.
 - [x] Task: Refactor Validation for Dual-Mode. 5bb2ba7
     - [ ] Update `PromptGuardClient` to support a "Local" mode (using `candle` or similar) vs "Remote" mode (Ollama).
     - [ ] Add configuration parsing for validation mode.
-- [ ] Task: Integrate Input Validation Middleware.
+- [x] Task: Integrate Input Validation Middleware. c70cedd
     - [ ] Update the handler to call `InputValidationMiddleware` before forwarding.
     - [ ] Return 400 Bad Request if Prompt Guard blocks the input.
 - [ ] Task: Integrate Output Redaction.
