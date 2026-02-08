@@ -44,7 +44,7 @@ This plan outlines the steps to build the HTTP proxy layer.
 - [x] Task: Conductor - User Manual Verification 'Advanced Security Integration' (Protocol in workflow.md) 76334e1
 
 ## Phase 5: Docker & Deployment
-- [ ] Task: Update Docker Configuration.
+- [x] Task: Update Docker Configuration. 611f65e
     - [ ] Expose port 3000 in `docker-compose.yml`.
     - [ ] Update `Dockerfile` to expose the port.
     - [ ] Add new configuration variables to `docker-compose.yml`.
