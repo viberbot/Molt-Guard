@@ -33,6 +33,6 @@ This plan outlines the steps to build the core security middleware and hardened 
 - [x] Task: Implement Vault Configuration Fetching. 91fdab1
     - [ ] Write tests for Vault API integration.
     - [ ] Implement startup logic to fetch configuration from Vault.
-- [ ] Task: Finalize Docker Hardening.
+- [x] Task: Finalize Docker Hardening. f862d01
     - [ ] Configure non-root user, read-only FS, and resource limits in Docker Compose.
 - [ ] Task: Conductor - User Manual Verification 'Vault Integration & Hardening' (Protocol in workflow.md)
