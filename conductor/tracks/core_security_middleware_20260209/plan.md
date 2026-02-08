@@ -29,10 +29,10 @@ This plan outlines the steps to build the core security middleware and hardened 
     - [x] Implement in-process PII detection using a library like `candle`.
 - [x] Task: Conductor - User Manual Verification 'Output Filtering (Secrets & PII)' (Protocol in workflow.md) a99bcc4
 
-## Phase 4: Vault Integration & Hardening
+## Phase 4: Vault Integration & Hardening [checkpoint: 3013e0c]
 - [x] Task: Implement Vault Configuration Fetching. 91fdab1
-    - [ ] Write tests for Vault API integration.
-    - [ ] Implement startup logic to fetch configuration from Vault.
+    - [x] Write tests for Vault API integration.
+    - [x] Implement startup logic to fetch configuration from Vault.
 - [x] Task: Finalize Docker Hardening. f862d01
-    - [ ] Configure non-root user, read-only FS, and resource limits in Docker Compose.
-- [ ] Task: Conductor - User Manual Verification 'Vault Integration & Hardening' (Protocol in workflow.md)
+    - [x] Configure non-root user, read-only FS, and resource limits in Docker Compose.
+- [x] Task: Conductor - User Manual Verification 'Vault Integration & Hardening' (Protocol in workflow.md) 3013e0c
