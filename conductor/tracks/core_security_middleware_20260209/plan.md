@@ -2,14 +2,14 @@
 
 This plan outlines the steps to build the core security middleware and hardened environment.
 
-## Phase 1: Foundation & Project Scaffolding
+## Phase 1: Foundation & Project Scaffolding [checkpoint: 96aeb6c]
 - [x] Task: Initialize Rust project and Cargo workspace. 76dc756
-    - [ ] Create `Cargo.toml` with necessary dependencies (tokio, reqwest, serde, etc.).
-    - [ ] Set up basic project structure.
+    - [x] Create `Cargo.toml` with necessary dependencies (tokio, reqwest, serde, etc.).
+    - [x] Set up basic project structure.
 - [x] Task: Configure Dockerized environment. 41b8df4
-    - [ ] Create a multi-stage `Dockerfile` using Google Distroless.
-    - [ ] Define `docker-compose.yml` with Molt bot and HashiCorp Vault.
-- [ ] Task: Conductor - User Manual Verification 'Foundation & Project Scaffolding' (Protocol in workflow.md)
+    - [x] Create a multi-stage `Dockerfile` using Google Distroless.
+    - [x] Define `docker-compose.yml` with Molt bot and HashiCorp Vault.
+- [x] Task: Conductor - User Manual Verification 'Foundation & Project Scaffolding' (Protocol in workflow.md) 96aeb6c
 
 ## Phase 2: Input Validation (Prompt Guard)
 - [ ] Task: Implement Prompt Guard client.
