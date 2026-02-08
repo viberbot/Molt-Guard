@@ -15,11 +15,11 @@ This plan outlines the steps to build the HTTP proxy layer.
 - [x] Task: Define OpenAI Data Structures. fab900b
     - [ ] Create `src/api_types.rs` with structs for `ChatCompletionRequest`, `ChatCompletionResponse`, etc.
     - [ ] Use `serde` for serialization/deserialization.
-- [ ] Task: Implement `/v1/chat/completions` Handler (Basic Forwarding).
-    - [ ] Create the handler that accepts the request and forwards it to Ollama *without* filtering first.
-- [ ] Task: Create Proxy Integration Tests.
-    - [ ] Create `tests/integration_test.rs`.
-    - [ ] Write a test that spins up the proxy and mocks the Ollama backend to verify forwarding.
+- [x] Task: Implement `/v1/chat/completions` Handler (Basic Forwarding). 95d709b
+    - [x] Create the handler that accepts the request and forwards it to Ollama *without* filtering first.
+- [x] Task: Create Proxy Integration Tests. 95d709b
+    - [x] Create `tests/integration_test.rs`.
+    - [x] Write a test that spins up the proxy and mocks the Ollama backend to verify forwarding.
 - [ ] Task: Conductor - User Manual Verification 'OpenAI Proxy Logic' (Protocol in workflow.md)
 
 ## Phase 3: Model Management (Auto-Download)
