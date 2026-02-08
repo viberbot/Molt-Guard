@@ -12,7 +12,7 @@ This plan outlines the steps to build the HTTP proxy layer.
 - [x] Task: Conductor - User Manual Verification 'Web Server Foundation' (Protocol in workflow.md) 8e89f34
 
 ## Phase 2: OpenAI Proxy Logic & Integration Tests
-- [ ] Task: Define OpenAI Data Structures.
+- [x] Task: Define OpenAI Data Structures. fab900b
     - [ ] Create `src/api_types.rs` with structs for `ChatCompletionRequest`, `ChatCompletionResponse`, etc.
     - [ ] Use `serde` for serialization/deserialization.
 - [ ] Task: Implement `/v1/chat/completions` Handler (Basic Forwarding).
