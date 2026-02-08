@@ -13,6 +13,8 @@ use axum::{
     http::StatusCode,
 };
 use crate::api_types::{ChatCompletionRequest, ChatCompletionResponse, Message, Choice};
+use crate::prompt_guard::{PromptGuardClient, ValidationMode};
+use crate::middleware::InputValidationMiddleware;
 use serde::{Deserialize, Serialize};
 
 pub fn create_app() -> Router {
@@ -39,7 +41,28 @@ async fn chat_completions_handler(
 ) -> Result<Json<ChatCompletionResponse>, (StatusCode, String)> {
     let ollama_url = std::env::var("OLLAMA_URL")
         .unwrap_or_else(|_| "http://192.168.68.68:11434".to_string());
+    
+    let validation_mode_str = std::env::var("VALIDATION_MODE").unwrap_or_else(|_| "Local".to_string());
+    let validation_mode = match validation_mode_str.as_str() {
+        "Remote" => ValidationMode::Remote,
+        _ => ValidationMode::Local,
+    };
 
+    // 1. Input Validation
+    let prompt_guard = PromptGuardClient::new(&ollama_url, validation_mode);
+    let middleware = InputValidationMiddleware::new(prompt_guard);
+
+    // Extract the latest user message for validation
+    if let Some(last_message) = payload.messages.last() {
+        if last_message.role == "user" {
+            match middleware.process(&last_message.content).await {
+                Ok(_) => {}, // Safe
+                Err(e) => return Err((StatusCode::BAD_REQUEST, e.to_string())),
+            }
+        }
+    }
+
+    // 2. Forward to Ollama
     let client = reqwest::Client::new();
     let url = format!("{}/api/chat", ollama_url);
 
