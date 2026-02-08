@@ -11,14 +11,14 @@ This plan outlines the steps to build the core security middleware and hardened 
     - [x] Define `docker-compose.yml` with Molt bot and HashiCorp Vault.
 - [x] Task: Conductor - User Manual Verification 'Foundation & Project Scaffolding' (Protocol in workflow.md) 96aeb6c
 
-## Phase 2: Input Validation (Prompt Guard)
+## Phase 2: Input Validation (Prompt Guard) [checkpoint: 448bae7]
 - [x] Task: Implement Prompt Guard client. ac05342
-    - [ ] Write tests for the Ollama Prompt Guard API client.
-    - [ ] Implement the client in Rust to communicate with 192.168.68.68.
+    - [x] Write tests for the Ollama Prompt Guard API client.
+    - [x] Implement the client in Rust to communicate with 192.168.68.68.
 - [x] Task: Integrate Input Validation Middleware. a10740b
-    - [ ] Write tests for the input interceptor logic.
-    - [ ] Implement middleware to block malicious prompts with educational messages.
-- [ ] Task: Conductor - User Manual Verification 'Input Validation (Prompt Guard)' (Protocol in workflow.md)
+    - [x] Write tests for the input interceptor logic.
+    - [x] Implement middleware to block malicious prompts with educational messages.
+- [x] Task: Conductor - User Manual Verification 'Input Validation (Prompt Guard)' (Protocol in workflow.md) 448bae7
 
 ## Phase 3: Output Filtering (Secrets & PII)
 - [ ] Task: Implement Secrets Redaction.
