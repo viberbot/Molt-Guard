@@ -10,18 +10,29 @@ use axum::{
     routing::{get, post},
     Router,
     Json,
+    extract::State,
     http::StatusCode,
 };
 use crate::api_types::{ChatCompletionRequest, ChatCompletionResponse, Message, Choice};
 use crate::prompt_guard::{PromptGuardClient, ValidationMode};
 use crate::middleware::InputValidationMiddleware;
+use crate::secrets_filter::SecretsFilter;
+use crate::pii_filter::PiiFilter;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
-pub fn create_app() -> Router {
+#[derive(Clone)]
+pub struct AppState {
+    pub ollama_url: String,
+    pub validation_mode: ValidationMode,
+}
+
+pub fn create_app(state: AppState) -> Router {
     Router::new()
         .route("/", get(|| async { "Molt Bot Secure Proxy" }))
         .route("/health", get(|| async { "OK" }))
         .route("/v1/chat/completions", post(chat_completions_handler))
+        .with_state(state)
 }
 
 #[derive(Serialize)]
@@ -37,19 +48,12 @@ struct OllamaChatResponse {
 }
 
 async fn chat_completions_handler(
+    State(state): State<AppState>,
     Json(payload): Json<ChatCompletionRequest>,
 ) -> Result<Json<ChatCompletionResponse>, (StatusCode, String)> {
-    let ollama_url = std::env::var("OLLAMA_URL")
-        .unwrap_or_else(|_| "http://192.168.68.68:11434".to_string());
     
-    let validation_mode_str = std::env::var("VALIDATION_MODE").unwrap_or_else(|_| "Local".to_string());
-    let validation_mode = match validation_mode_str.as_str() {
-        "Remote" => ValidationMode::Remote,
-        _ => ValidationMode::Local,
-    };
-
     // 1. Input Validation
-    let prompt_guard = PromptGuardClient::new(&ollama_url, validation_mode);
+    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode);
     let middleware = InputValidationMiddleware::new(prompt_guard);
 
     // Extract the latest user message for validation
@@ -64,7 +68,7 @@ async fn chat_completions_handler(
 
     // 2. Forward to Ollama
     let client = reqwest::Client::new();
-    let url = format!("{}/api/chat", ollama_url);
+    let url = format!("{}/api/chat", state.ollama_url);
 
     let ollama_request = OllamaChatRequest {
         model: payload.model.clone(),
@@ -85,6 +89,14 @@ async fn chat_completions_handler(
     let ollama_response: OllamaChatResponse = response.json().await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+    // 3. Output Redaction
+    let secrets_filter = SecretsFilter::new();
+    let pii_filter = PiiFilter::new();
+
+    let mut content = ollama_response.message.content;
+    content = secrets_filter.redact(&content);
+    content = pii_filter.redact(&content);
+
     Ok(Json(ChatCompletionResponse {
         id: "chatcmpl-proxy".to_string(),
         object: "chat.completion".to_string(),
@@ -92,7 +104,10 @@ async fn chat_completions_handler(
         model: payload.model,
         choices: vec![Choice {
             index: 0,
-            message: ollama_response.message,
+            message: Message {
+                role: ollama_response.message.role,
+                content,
+            },
             finish_reason: Some("stop".to_string()),
         }],
         usage: None,
