@@ -25,7 +25,7 @@ This plan outlines the steps to build the HTTP proxy layer.
 ## Phase 3: Model Management (Auto-Download)
 - [x] Task: Implement Model Availability Check. 28992e2
     - [ ] Update `VaultClient` (or create `OllamaClient`) to list local models on the Ollama server.
-- [ ] Task: Implement Auto-Download Logic.
+- [x] Task: Implement Auto-Download Logic. f24529b
     - [ ] If a required model (e.g., `prompt-guard`) is missing, trigger `ollama pull`.
     - [ ] Integrate this check into the server startup sequence.
 - [ ] Task: Conductor - User Manual Verification 'Model Management' (Protocol in workflow.md)
