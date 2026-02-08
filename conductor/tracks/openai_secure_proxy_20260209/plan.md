@@ -11,16 +11,16 @@ This plan outlines the steps to build the HTTP proxy layer.
     - [x] Write a test to query the health endpoint.
 - [x] Task: Conductor - User Manual Verification 'Web Server Foundation' (Protocol in workflow.md) 8e89f34
 
-## Phase 2: OpenAI Proxy Logic & Integration Tests
+## Phase 2: OpenAI Proxy Logic & Integration Tests [checkpoint: e555ff3]
 - [x] Task: Define OpenAI Data Structures. fab900b
-    - [ ] Create `src/api_types.rs` with structs for `ChatCompletionRequest`, `ChatCompletionResponse`, etc.
-    - [ ] Use `serde` for serialization/deserialization.
+    - [x] Create `src/api_types.rs` with structs for `ChatCompletionRequest`, `ChatCompletionResponse`, etc.
+    - [x] Use `serde` for serialization/deserialization.
 - [x] Task: Implement `/v1/chat/completions` Handler (Basic Forwarding). 95d709b
     - [x] Create the handler that accepts the request and forwards it to Ollama *without* filtering first.
 - [x] Task: Create Proxy Integration Tests. 95d709b
     - [x] Create `tests/integration_test.rs`.
     - [x] Write a test that spins up the proxy and mocks the Ollama backend to verify forwarding.
-- [ ] Task: Conductor - User Manual Verification 'OpenAI Proxy Logic' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'OpenAI Proxy Logic' (Protocol in workflow.md) e555ff3
 
 ## Phase 3: Model Management (Auto-Download)
 - [ ] Task: Implement Model Availability Check.
