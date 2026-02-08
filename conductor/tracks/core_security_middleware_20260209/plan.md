@@ -3,7 +3,7 @@
 This plan outlines the steps to build the core security middleware and hardened environment.
 
 ## Phase 1: Foundation & Project Scaffolding
-- [ ] Task: Initialize Rust project and Cargo workspace.
+- [x] Task: Initialize Rust project and Cargo workspace. 76dc756
     - [ ] Create `Cargo.toml` with necessary dependencies (tokio, reqwest, serde, etc.).
     - [ ] Set up basic project structure.
 - [ ] Task: Configure Dockerized environment.
