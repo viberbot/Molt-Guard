@@ -20,14 +20,14 @@ This plan outlines the steps to build the core security middleware and hardened 
     - [x] Implement middleware to block malicious prompts with educational messages.
 - [x] Task: Conductor - User Manual Verification 'Input Validation (Prompt Guard)' (Protocol in workflow.md) 448bae7
 
-## Phase 3: Output Filtering (Secrets & PII)
+## Phase 3: Output Filtering (Secrets & PII) [checkpoint: a99bcc4]
 - [x] Task: Implement Secrets Redaction. cde5f63
-    - [ ] Write tests for regex-based secret detection (similar to gitleaks).
-    - [ ] Implement the redaction logic in Rust.
+    - [x] Write tests for regex-based secret detection (similar to gitleaks).
+    - [x] Implement the redaction logic in Rust.
 - [x] Task: Implement PII Semantic Detection. 5f27cde
-    - [ ] Write tests for the lightweight LLM PII scanner integration.
-    - [ ] Implement in-process PII detection using a library like `candle`.
-- [ ] Task: Conductor - User Manual Verification 'Output Filtering (Secrets & PII)' (Protocol in workflow.md)
+    - [x] Write tests for the lightweight LLM PII scanner integration.
+    - [x] Implement in-process PII detection using a library like `candle`.
+- [x] Task: Conductor - User Manual Verification 'Output Filtering (Secrets & PII)' (Protocol in workflow.md) a99bcc4
 
 ## Phase 4: Vault Integration & Hardening
 - [ ] Task: Implement Vault Configuration Fetching.
