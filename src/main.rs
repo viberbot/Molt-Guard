@@ -1,3 +1,5 @@
+mod prompt_guard;
+
 fn main() {
     println!("Hello, world!");
 }
