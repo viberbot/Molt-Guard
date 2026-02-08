@@ -37,7 +37,7 @@ This plan outlines the steps to build the HTTP proxy layer.
 - [x] Task: Integrate Input Validation Middleware. c70cedd
     - [ ] Update the handler to call `InputValidationMiddleware` before forwarding.
     - [ ] Return 400 Bad Request if Prompt Guard blocks the input.
-- [ ] Task: Integrate Output Redaction.
+- [x] Task: Integrate Output Redaction. 0224812
     - [ ] Update the handler to capture the Ollama response.
     - [ ] Apply `SecretsFilter` and `PiiFilter` to the response content.
     - [ ] Return the sanitized response.
