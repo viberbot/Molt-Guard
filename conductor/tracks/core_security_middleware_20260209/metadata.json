@@ -1,8 +1,0 @@
-{
-  "track_id": "core_security_middleware_20260209",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-02-09T12:00:00Z",
-  "updated_at": "2026-02-09T12:00:00Z",
-  "description": "Build the core security middleware and Dockerized environment for the Hardened Molt Bot."
-}
