@@ -1,6 +1,7 @@
 mod prompt_guard;
 mod middleware;
 mod secrets_filter;
+mod pii_filter;
 
 fn main() {
     println!("Hello, world!");
