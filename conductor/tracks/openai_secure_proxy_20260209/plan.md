@@ -43,9 +43,9 @@ This plan outlines the steps to build the HTTP proxy layer.
     - [x] Return the sanitized response.
 - [x] Task: Conductor - User Manual Verification 'Advanced Security Integration' (Protocol in workflow.md) 76334e1
 
-## Phase 5: Docker & Deployment
+## Phase 5: Docker & Deployment [checkpoint: 4fb3d65]
 - [x] Task: Update Docker Configuration. 611f65e
-    - [ ] Expose port 3000 in `docker-compose.yml`.
-    - [ ] Update `Dockerfile` to expose the port.
-    - [ ] Add new configuration variables to `docker-compose.yml`.
-- [ ] Task: Conductor - User Manual Verification 'Docker & Deployment' (Protocol in workflow.md)
+    - [x] Expose port 3000 in `docker-compose.yml`.
+    - [x] Update `Dockerfile` to expose the port.
+    - [x] Add new configuration variables to `docker-compose.yml`.
+- [x] Task: Conductor - User Manual Verification 'Docker & Deployment' (Protocol in workflow.md) 4fb3d65
