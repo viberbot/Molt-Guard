@@ -13,4 +13,6 @@ COPY --from=builder /app/target/release/molt-config /app/molt-bot
 
 WORKDIR /app
 
+USER nonroot
+
 CMD ["./molt-bot"]

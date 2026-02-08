@@ -7,6 +7,18 @@ services:
     environment:
       - VAULT_ADDR=http://vault:8200
       - VAULT_TOKEN=root
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
 
   vault:
     image: hashicorp/vault:latest
