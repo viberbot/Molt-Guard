@@ -30,18 +30,18 @@ This plan outlines the steps to build the HTTP proxy layer.
     - [x] Integrate this check into the server startup sequence.
 - [x] Task: Conductor - User Manual Verification 'Model Management' (Protocol in workflow.md) 176eece
 
-## Phase 4: Advanced Security Integration (Dual-Mode)
+## Phase 4: Advanced Security Integration (Dual-Mode) [checkpoint: 76334e1]
 - [x] Task: Refactor Validation for Dual-Mode. 5bb2ba7
-    - [ ] Update `PromptGuardClient` to support a "Local" mode (using `candle` or similar) vs "Remote" mode (Ollama).
-    - [ ] Add configuration parsing for validation mode.
+    - [x] Update `PromptGuardClient` to support a "Local" mode (using `candle` or similar) vs "Remote" mode (Ollama).
+    - [x] Add configuration parsing for validation mode.
 - [x] Task: Integrate Input Validation Middleware. c70cedd
-    - [ ] Update the handler to call `InputValidationMiddleware` before forwarding.
-    - [ ] Return 400 Bad Request if Prompt Guard blocks the input.
+    - [x] Update the handler to call `InputValidationMiddleware` before forwarding.
+    - [x] Return 400 Bad Request if Prompt Guard blocks the input.
 - [x] Task: Integrate Output Redaction. 0224812
-    - [ ] Update the handler to capture the Ollama response.
-    - [ ] Apply `SecretsFilter` and `PiiFilter` to the response content.
-    - [ ] Return the sanitized response.
-- [ ] Task: Conductor - User Manual Verification 'Advanced Security Integration' (Protocol in workflow.md)
+    - [x] Update the handler to capture the Ollama response.
+    - [x] Apply `SecretsFilter` and `PiiFilter` to the response content.
+    - [x] Return the sanitized response.
+- [x] Task: Conductor - User Manual Verification 'Advanced Security Integration' (Protocol in workflow.md) 76334e1
 
 ## Phase 5: Docker & Deployment
 - [ ] Task: Update Docker Configuration.
