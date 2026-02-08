@@ -22,13 +22,13 @@ This plan outlines the steps to build the HTTP proxy layer.
     - [x] Write a test that spins up the proxy and mocks the Ollama backend to verify forwarding.
 - [x] Task: Conductor - User Manual Verification 'OpenAI Proxy Logic' (Protocol in workflow.md) e555ff3
 
-## Phase 3: Model Management (Auto-Download)
+## Phase 3: Model Management (Auto-Download) [checkpoint: 176eece]
 - [x] Task: Implement Model Availability Check. 28992e2
-    - [ ] Update `VaultClient` (or create `OllamaClient`) to list local models on the Ollama server.
+    - [x] Update `VaultClient` (or create `OllamaClient`) to list local models on the Ollama server.
 - [x] Task: Implement Auto-Download Logic. f24529b
-    - [ ] If a required model (e.g., `prompt-guard`) is missing, trigger `ollama pull`.
-    - [ ] Integrate this check into the server startup sequence.
-- [ ] Task: Conductor - User Manual Verification 'Model Management' (Protocol in workflow.md)
+    - [x] If a required model (e.g., `prompt-guard`) is missing, trigger `ollama pull`.
+    - [x] Integrate this check into the server startup sequence.
+- [x] Task: Conductor - User Manual Verification 'Model Management' (Protocol in workflow.md) 176eece
 
 ## Phase 4: Advanced Security Integration (Dual-Mode)
 - [ ] Task: Refactor Validation for Dual-Mode.
