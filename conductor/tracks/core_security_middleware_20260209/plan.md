@@ -30,7 +30,7 @@ This plan outlines the steps to build the core security middleware and hardened 
 - [x] Task: Conductor - User Manual Verification 'Output Filtering (Secrets & PII)' (Protocol in workflow.md) a99bcc4
 
 ## Phase 4: Vault Integration & Hardening
-- [ ] Task: Implement Vault Configuration Fetching.
+- [x] Task: Implement Vault Configuration Fetching. 91fdab1
     - [ ] Write tests for Vault API integration.
     - [ ] Implement startup logic to fetch configuration from Vault.
 - [ ] Task: Finalize Docker Hardening.
