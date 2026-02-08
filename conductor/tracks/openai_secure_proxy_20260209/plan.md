@@ -2,14 +2,14 @@
 
 This plan outlines the steps to build the HTTP proxy layer.
 
-## Phase 1: Web Server Foundation
+## Phase 1: Web Server Foundation [checkpoint: 8e89f34]
 - [x] Task: Add Axum and Tokio dependencies. 6d73f67
-    - [ ] Update `Cargo.toml` with `axum`, `tower`, `tower-http`, `tokio`.
-    - [ ] Create basic server scaffold in `src/main.rs`.
+    - [x] Update `Cargo.toml` with `axum`, `tower`, `tower-http`, `tokio`.
+    - [x] Create basic server scaffold in `src/main.rs`.
 - [x] Task: Implement Health Check Endpoint. e7b9bb4
-    - [ ] Create a `/health` endpoint to verify the server is running.
-    - [ ] Write a test to query the health endpoint.
-- [ ] Task: Conductor - User Manual Verification 'Web Server Foundation' (Protocol in workflow.md)
+    - [x] Create a `/health` endpoint to verify the server is running.
+    - [x] Write a test to query the health endpoint.
+- [x] Task: Conductor - User Manual Verification 'Web Server Foundation' (Protocol in workflow.md) 8e89f34
 
 ## Phase 2: OpenAI Proxy Logic & Integration Tests
 - [ ] Task: Define OpenAI Data Structures.
