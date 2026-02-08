@@ -1,21 +1,5 @@
-mod prompt_guard;
-mod middleware;
-mod secrets_filter;
-mod pii_filter;
-mod vault;
-mod api_types;
-
-use axum::{
-    routing::get,
-    Router,
-};
+use molt_config::create_app;
 use std::net::SocketAddr;
-
-fn create_app() -> Router {
-    Router::new()
-        .route("/", get(|| async { "Molt Bot Secure Proxy" }))
-        .route("/health", get(|| async { "OK" }))
-}
 
 #[tokio::main]
 async fn main() {
@@ -32,26 +16,4 @@ async fn main() {
     // Start the server
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use axum::{
-        body::Body,
-        http::{Request, StatusCode},
-    };
-    use tower::ServiceExt; // for `oneshot`
-
-    #[tokio::test]
-    async fn test_health_check() {
-        let app = create_app();
-
-        let response = app
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
-            .await
-            .unwrap();
-
-        assert_eq!(response.status(), StatusCode::OK);
-    }
 }
