@@ -24,7 +24,7 @@ This plan outlines the steps to build the core security middleware and hardened 
 - [x] Task: Implement Secrets Redaction. cde5f63
     - [ ] Write tests for regex-based secret detection (similar to gitleaks).
     - [ ] Implement the redaction logic in Rust.
-- [ ] Task: Implement PII Semantic Detection.
+- [x] Task: Implement PII Semantic Detection. 5f27cde
     - [ ] Write tests for the lightweight LLM PII scanner integration.
     - [ ] Implement in-process PII detection using a library like `candle`.
 - [ ] Task: Conductor - User Manual Verification 'Output Filtering (Secrets & PII)' (Protocol in workflow.md)
