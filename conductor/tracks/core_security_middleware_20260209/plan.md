@@ -21,7 +21,7 @@ This plan outlines the steps to build the core security middleware and hardened 
 - [x] Task: Conductor - User Manual Verification 'Input Validation (Prompt Guard)' (Protocol in workflow.md) 448bae7
 
 ## Phase 3: Output Filtering (Secrets & PII)
-- [ ] Task: Implement Secrets Redaction.
+- [x] Task: Implement Secrets Redaction. cde5f63
     - [ ] Write tests for regex-based secret detection (similar to gitleaks).
     - [ ] Implement the redaction logic in Rust.
 - [ ] Task: Implement PII Semantic Detection.
