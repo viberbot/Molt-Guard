@@ -15,4 +15,6 @@ WORKDIR /app
 
 USER nonroot
 
+EXPOSE 3005
+
 CMD ["./molt-bot"]
