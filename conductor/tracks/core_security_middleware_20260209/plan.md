@@ -12,7 +12,7 @@ This plan outlines the steps to build the core security middleware and hardened 
 - [x] Task: Conductor - User Manual Verification 'Foundation & Project Scaffolding' (Protocol in workflow.md) 96aeb6c
 
 ## Phase 2: Input Validation (Prompt Guard)
-- [ ] Task: Implement Prompt Guard client.
+- [x] Task: Implement Prompt Guard client. ac05342
     - [ ] Write tests for the Ollama Prompt Guard API client.
     - [ ] Implement the client in Rust to communicate with 192.168.68.68.
 - [ ] Task: Integrate Input Validation Middleware.
