@@ -3,6 +3,7 @@ mod middleware;
 mod secrets_filter;
 mod pii_filter;
 mod vault;
+mod api_types;
 
 use axum::{
     routing::get,
