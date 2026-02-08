@@ -15,7 +15,7 @@ This plan outlines the steps to build the core security middleware and hardened 
 - [x] Task: Implement Prompt Guard client. ac05342
     - [ ] Write tests for the Ollama Prompt Guard API client.
     - [ ] Implement the client in Rust to communicate with 192.168.68.68.
-- [ ] Task: Integrate Input Validation Middleware.
+- [x] Task: Integrate Input Validation Middleware. a10740b
     - [ ] Write tests for the input interceptor logic.
     - [ ] Implement middleware to block malicious prompts with educational messages.
 - [ ] Task: Conductor - User Manual Verification 'Input Validation (Prompt Guard)' (Protocol in workflow.md)
