@@ -9,7 +9,7 @@ RUN cargo build --release
 # Runtime stage
 FROM gcr.io/distroless/cc-debian12
 
-COPY --from=builder /app/target/release/molt-config /app/molt-bot
+COPY --from=builder /app/target/release/molt-guard /app/molt-guard
 
 WORKDIR /app
 
@@ -17,4 +17,4 @@ USER nonroot
 
 EXPOSE 3005
 
-CMD ["./molt-bot"]
+CMD ["./molt-guard"]

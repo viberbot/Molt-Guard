@@ -1,7 +1,7 @@
 services:
-  molt-bot:
+  molt-guard:
     build: .
-    container_name: molt-bot
+    container_name: molt-guard
     ports:
       - "3005:3005"
     environment:

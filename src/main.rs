@@ -1,4 +1,4 @@
-use molt_config::{create_app, AppState, prompt_guard::ValidationMode, ollama_client::OllamaClient};
+use molt_guard::{create_app, AppState, prompt_guard::ValidationMode, ollama_client::OllamaClient};
 use std::net::SocketAddr;
 
 #[tokio::main]

@@ -1,4 +1,4 @@
-use molt_config::{create_app, AppState, prompt_guard::ValidationMode};
+use molt_guard::{create_app, AppState, prompt_guard::ValidationMode};
 use axum::{
     body::Body,
     http::{Request, StatusCode},
