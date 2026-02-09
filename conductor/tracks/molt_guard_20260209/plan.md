@@ -13,7 +13,7 @@
 
 ## Phase 3: Core Feature Enhancements [checkpoint: fb44dde]
 - [x] Task: TDD - Configurable Prompt Guard Sensitivity (ad57997)
-- [x] Task: Implement Transparent Proxy Fallback and Secure Ollama-native Endpoints (1bfee6b) (Verified visibility in WebUI)
+- [x] Task: Implement Transparent Proxy Fallback and Secure Ollama-native Endpoints (643638e) (Verified visibility in WebUI and Polite Rejection)
 - [x] Task: Conductor - User Manual Verification 'Core Feature Enhancements' (Protocol in workflow.md)
 
 ## Phase 4: Documentation and Finalization [checkpoint: d553d06]

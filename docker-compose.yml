@@ -3,10 +3,11 @@ services:
     build: .
     container_name: molt-guard
     ports:
-      - "3005:3005"
+      - "11434:3005"
     environment:
-      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_URL=http://192.168.68.68:11434
       - VALIDATION_MODE=Remote
+      - PROMPT_SENSITIVITY=Medium
     networks:
       - infrastructure
     read_only: true
