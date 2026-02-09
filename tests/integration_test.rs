@@ -29,6 +29,7 @@ async fn test_openai_proxy_forwarding() {
         ollama_url: mock_server.uri(),
         validation_mode: ValidationMode::Local, 
         sensitivity: Sensitivity::Medium,
+        guard_model: "granite3-guardian:8b".to_string(),
     };
 
     let app = create_app(state);
@@ -68,6 +69,7 @@ async fn test_openai_proxy_blocks_malicious() {
         ollama_url: mock_server.uri(),
         validation_mode: ValidationMode::Local,
         sensitivity: Sensitivity::Medium,
+        guard_model: "granite3-guardian:8b".to_string(),
     };
 
     let app = create_app(state);
@@ -119,6 +121,7 @@ async fn test_openai_proxy_redacts_response() {
         ollama_url: mock_server.uri(),
         validation_mode: ValidationMode::Local,
         sensitivity: Sensitivity::Medium,
+        guard_model: "granite3-guardian:8b".to_string(),
     };
 
     let app = create_app(state);
@@ -171,6 +174,7 @@ async fn test_openai_proxy_list_models() {
         ollama_url: mock_server.uri(),
         validation_mode: ValidationMode::Local,
         sensitivity: Sensitivity::Medium,
+        guard_model: "granite3-guardian:8b".to_string(),
     };
 
     let app = create_app(state);

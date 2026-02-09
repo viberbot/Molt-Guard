@@ -25,6 +25,7 @@ pub struct AppState {
     pub ollama_url: String,
     pub validation_mode: ValidationMode,
     pub sensitivity: Sensitivity,
+    pub guard_model: String,
 }
 
 pub fn create_app(state: AppState) -> Router {
@@ -77,6 +78,8 @@ async fn proxy_fallback_handler(
     let path_query = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("");
     let url = format!("{}{}", state.ollama_url, path_query);
     
+    println!(">>> PROXY FALLBACK: {} {} -> {}", method, path_query, url);
+
     let client = reqwest::Client::new();
     let mut rb = client.request(method, &url);
     
@@ -92,7 +95,10 @@ async fn proxy_fallback_handler(
     let res = rb.body(bytes)
         .send()
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+        .map_err(|e| {
+            println!("!!! PROXY ERROR: {}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+        })?;
 
     let mut builder = Response::builder().status(res.status());
     for (key, value) in res.headers().iter() {
@@ -147,13 +153,19 @@ async fn chat_completions_handler(
     Json(payload): Json<ChatCompletionRequest>,
 ) -> Result<Json<ChatCompletionResponse>, (StatusCode, String)> {
     
-    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity);
+    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity, &state.guard_model);
     let middleware = InputValidationMiddleware::new(prompt_guard);
 
     if let Some(last_message) = payload.messages.last() {
         if last_message.role == "user" {
             if let Err(e) = middleware.process(&last_message.content).await {
-                // RETURN AS LLM RESPONSE
+                let error_msg = e.to_string();
+                let status_msg = if error_msg.contains("provisioned") {
+                    format!("⏳ **Molt-Guard Security Status**: {}", error_msg)
+                } else {
+                    format!("🛡️ **Molt-Guard Security Alert**: {}", error_msg)
+                };
+
                 return Ok(Json(ChatCompletionResponse {
                     id: format!("chatcmpl-{}", uuid::Uuid::new_v4()),
                     object: "chat.completion".to_string(),
@@ -163,7 +175,7 @@ async fn chat_completions_handler(
                         index: 0,
                         message: Message {
                             role: "assistant".to_string(),
-                            content: format!("🛡️ **Molt-Guard Security Alert**: {}", e),
+                            content: status_msg,
                         },
                         finish_reason: Some("stop".to_string()),
                     }],
@@ -232,19 +244,25 @@ async fn ollama_chat_handler(
     Json(payload): Json<OllamaChatRequest>,
 ) -> Result<Response, (StatusCode, String)> {
     
-    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity);
+    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity, &state.guard_model);
     let middleware = InputValidationMiddleware::new(prompt_guard);
 
     if let Some(last_message) = payload.messages.last() {
         if last_message.role == "user" {
             if let Err(e) = middleware.process(&last_message.content).await {
-                // RETURN AS OLLAMA RESPONSE
+                let error_msg = e.to_string();
+                let status_msg = if error_msg.contains("provisioned") {
+                    format!("⏳ **Molt-Guard Security Status**: {}", error_msg)
+                } else {
+                    format!("🛡️ **Molt-Guard Security Alert**: {}", error_msg)
+                };
+
                 let ollama_resp = serde_json::json!({
                     "model": payload.model,
                     "created_at": "2026-02-09T00:00:00Z",
                     "message": {
                         "role": "assistant",
-                        "content": format!("🛡️ **Molt-Guard Security Alert**: {}", e)
+                        "content": status_msg
                     },
                     "done": true
                 });
@@ -262,15 +280,21 @@ async fn ollama_generate_handler(
     Json(payload): Json<OllamaGenerateRequest>,
 ) -> Result<Response, (StatusCode, String)> {
     
-    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity);
+    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity, &state.guard_model);
     let middleware = InputValidationMiddleware::new(prompt_guard);
 
     if let Err(e) = middleware.process(&payload.prompt).await {
-        // RETURN AS OLLAMA GENERATE RESPONSE
+        let error_msg = e.to_string();
+        let status_msg = if error_msg.contains("provisioned") {
+            format!("⏳ **Molt-Guard Security Status**: {}", error_msg)
+        } else {
+            format!("🛡️ **Molt-Guard Security Alert**: {}", error_msg)
+        };
+
         let ollama_resp = serde_json::json!({
             "model": payload.model,
             "created_at": "2026-02-09T00:00:00Z",
-            "response": format!("🛡️ **Molt-Guard Security Alert**: {}", e),
+            "response": status_msg,
             "done": true
         });
         return Ok(Json(ollama_resp).into_response());

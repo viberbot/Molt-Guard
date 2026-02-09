@@ -27,14 +27,18 @@ async fn main() -> anyhow::Result<()> {
     };
     println!("Sensitivity: {:?}", sensitivity);
 
+    let guard_model = std::env::var("GUARD_MODEL").unwrap_or_else(|_| "granite3-guardian:latest".to_string());
+    println!("Guard Model: {}", guard_model);
+
     // Run model presence check in the background
     let ollama_url_clone = ollama_url.clone();
+    let guard_model_clone = guard_model.clone();
     tokio::spawn(async move {
         let client = OllamaClient::new(&ollama_url_clone);
-        if let Err(e) = client.ensure_model_exists("llama3.1:latest").await {
-            eprintln!("Warning: Failed to ensure model 'llama3.1:latest' exists: {}", e);
+        if let Err(e) = client.ensure_model_exists(&guard_model_clone).await {
+            eprintln!("Warning: Failed to ensure guard model '{}' exists: {}", guard_model_clone, e);
         } else {
-            println!("Ensured llama3.1:latest exists.");
+            println!("Ensured specialized security model '{}' exists on backend.", guard_model_clone);
         }
     });
 
@@ -42,6 +46,7 @@ async fn main() -> anyhow::Result<()> {
         ollama_url,
         validation_mode,
         sensitivity,
+        guard_model,
     };
 
     // Define the app routes
