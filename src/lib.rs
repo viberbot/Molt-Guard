@@ -10,7 +10,8 @@ use axum::{
     Router,
     Json,
     extract::State,
-    http::StatusCode,
+    http::{StatusCode, Method},
+    response::{Response, IntoResponse},
 };
 use crate::api_types::{ChatCompletionRequest, ChatCompletionResponse, Message, Choice, ListModelsResponse, ModelObject};
 use crate::prompt_guard::{PromptGuardClient, ValidationMode, Sensitivity};
@@ -32,13 +33,17 @@ pub fn create_app(state: AppState) -> Router {
         .route("/health", get(|| async { "OK" }))
         .route("/v1/models", get(list_models_handler))
         .route("/v1/chat/completions", post(chat_completions_handler))
+        .route("/api/chat", post(ollama_chat_handler))
+        .route("/api/generate", post(ollama_generate_handler))
+        .fallback(proxy_fallback_handler)
         .with_state(state)
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Clone)]
 struct OllamaChatRequest {
     model: String,
     messages: Vec<Message>,
+    #[serde(default)]
     stream: bool,
 }
 
@@ -47,6 +52,57 @@ struct OllamaChatResponse {
     message: Message,
     prompt_eval_count: Option<u64>,
     eval_count: Option<u64>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct OllamaGenerateRequest {
+    model: String,
+    prompt: String,
+    #[serde(default)]
+    stream: bool,
+}
+
+#[derive(Deserialize)]
+struct OllamaGenerateResponse {
+    response: String,
+}
+
+/// Transparently proxy any request not explicitly handled by other routes
+async fn proxy_fallback_handler(
+    State(state): State<AppState>,
+    method: Method,
+    uri: axum::http::Uri,
+    headers: axum::http::HeaderMap,
+    body: axum::body::Body,
+) -> Result<Response, (StatusCode, String)> {
+    let path_query = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("");
+    let url = format!("{}{}", state.ollama_url, path_query);
+
+    let client = reqwest::Client::new();
+    let mut rb = client.request(method, &url);
+    
+    for (key, value) in headers.iter() {
+        if key != "host" {
+            rb = rb.header(key, value);
+        }
+    }
+    
+    // Convert axum Body to Bytes
+    let bytes = axum::body::to_bytes(body, 100 * 1024 * 1024).await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let res = rb.body(bytes)
+        .send()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let mut builder = Response::builder().status(res.status());
+    for (key, value) in res.headers().iter() {
+        builder = builder.header(key, value);
+    }
+
+    let res_bytes = res.bytes().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    Ok(builder.body(axum::body::Body::from(res_bytes)).unwrap())
 }
 
 async fn list_models_handler(
@@ -95,13 +151,10 @@ async fn chat_completions_handler(
     let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity);
     let middleware = InputValidationMiddleware::new(prompt_guard);
 
-    // Extract the latest user message for validation
     if let Some(last_message) = payload.messages.last() {
         if last_message.role == "user" {
-            match middleware.process(&last_message.content).await {
-                Ok(_) => {}, // Safe
-                Err(e) => return Err((StatusCode::BAD_REQUEST, e.to_string())),
-            }
+            middleware.process(&last_message.content).await
+                .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
         }
     }
 
@@ -122,21 +175,16 @@ async fn chat_completions_handler(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     if !response.status().is_success() {
-        return Err((response.status(), "Ollama backend error".to_string()));
+        let err_body = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+        return Err((StatusCode::INTERNAL_SERVER_ERROR, format!("Ollama error: {}", err_body)));
     }
 
     let ollama_response: OllamaChatResponse = response.json().await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     // 3. Output Redaction
-    let secrets_filter = SecretsFilter::new();
-    let pii_filter = PiiFilter::new();
+    let content = apply_filters(ollama_response.message.content);
 
-    let mut content = ollama_response.message.content;
-    content = secrets_filter.redact(&content);
-    content = pii_filter.redact(&content);
-
-    // Populate usage if available
     let usage = match (ollama_response.prompt_eval_count, ollama_response.eval_count) {
         (Some(p), Some(e)) => Some(crate::api_types::Usage {
             prompt_tokens: p,
@@ -162,4 +210,75 @@ async fn chat_completions_handler(
         usage,
         system_fingerprint: None,
     }))
+}
+
+async fn ollama_chat_handler(
+    State(state): State<AppState>,
+    Json(payload): Json<OllamaChatRequest>,
+) -> Result<Response, (StatusCode, String)> {
+    
+    // 1. Input Validation
+    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity);
+    let middleware = InputValidationMiddleware::new(prompt_guard);
+
+    if let Some(last_message) = payload.messages.last() {
+        if last_message.role == "user" {
+            middleware.process(&last_message.content).await
+                .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+        }
+    }
+
+    // 2. Forward to Ollama (Generic Proxy for now to support streaming/etc)
+    proxy_forward(&state.ollama_url, "/api/chat", Method::POST, Json(payload).into_response()).await
+}
+
+async fn ollama_generate_handler(
+    State(state): State<AppState>,
+    Json(payload): Json<OllamaGenerateRequest>,
+) -> Result<Response, (StatusCode, String)> {
+    
+    // 1. Input Validation
+    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity);
+    let middleware = InputValidationMiddleware::new(prompt_guard);
+
+    middleware.process(&payload.prompt).await
+        .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+
+    // 2. Forward to Ollama
+    proxy_forward(&state.ollama_url, "/api/generate", Method::POST, Json(payload).into_response()).await
+}
+
+async fn proxy_forward(base_url: &str, path: &str, method: Method, req_resp: Response) -> Result<Response, (StatusCode, String)> {
+    let url = format!("{}{}", base_url, path);
+    let client = reqwest::Client::new();
+    
+    let bytes = axum::body::to_bytes(req_resp.into_body(), 100 * 1024 * 1024).await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let res = client.request(method, &url)
+        .body(bytes)
+        .send()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let mut builder = Response::builder().status(res.status());
+    for (key, value) in res.headers().iter() {
+        builder = builder.header(key, value);
+    }
+
+    let res_bytes = res.bytes().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    
+    // Apply output filtering if it's a successful response
+    let body_str = String::from_utf8_lossy(&res_bytes);
+    let redacted_str = apply_filters(body_str.to_string());
+    
+    Ok(builder.body(axum::body::Body::from(redacted_str)).unwrap())
+}
+
+fn apply_filters(content: String) -> String {
+    let secrets_filter = SecretsFilter::new();
+    let pii_filter = PiiFilter::new();
+    let mut filtered = secrets_filter.redact(&content);
+    filtered = pii_filter.redact(&filtered);
+    filtered
 }
