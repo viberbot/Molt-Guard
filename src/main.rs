@@ -1,4 +1,4 @@
-use molt_guard::{create_app, AppState, prompt_guard::ValidationMode, ollama_client::OllamaClient};
+use molt_guard::{create_app, AppState, prompt_guard::{ValidationMode, Sensitivity}, ollama_client::OllamaClient};
 use std::net::SocketAddr;
 
 #[tokio::main]
@@ -16,6 +16,13 @@ async fn main() -> anyhow::Result<()> {
         _ => ValidationMode::Local,
     };
 
+    let sensitivity_str = std::env::var("PROMPT_SENSITIVITY").unwrap_or_else(|_| "Medium".to_string());
+    let sensitivity = match sensitivity_str.as_str() {
+        "Low" => Sensitivity::Low,
+        "High" => Sensitivity::High,
+        _ => Sensitivity::Medium,
+    };
+
     // Check and pull required models
     let client = OllamaClient::new(&ollama_url);
     if let Err(e) = client.ensure_model_exists("llama3.1:latest").await {
@@ -25,6 +32,7 @@ async fn main() -> anyhow::Result<()> {
     let state = AppState {
         ollama_url,
         validation_mode,
+        sensitivity,
     };
 
     // Define the app routes

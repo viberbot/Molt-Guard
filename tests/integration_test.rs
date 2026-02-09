@@ -1,4 +1,4 @@
-use molt_guard::{create_app, AppState, prompt_guard::ValidationMode};
+use molt_guard::{create_app, AppState, prompt_guard::{ValidationMode, Sensitivity}};
 use axum::{
     body::Body,
     http::{Request, StatusCode},
@@ -28,6 +28,7 @@ async fn test_openai_proxy_forwarding() {
     let state = AppState {
         ollama_url: mock_server.uri(),
         validation_mode: ValidationMode::Local, 
+        sensitivity: Sensitivity::Medium,
     };
 
     let app = create_app(state);
@@ -66,6 +67,7 @@ async fn test_openai_proxy_blocks_malicious() {
     let state = AppState {
         ollama_url: mock_server.uri(),
         validation_mode: ValidationMode::Local,
+        sensitivity: Sensitivity::Medium,
     };
 
     let app = create_app(state);
@@ -113,6 +115,7 @@ async fn test_openai_proxy_redacts_response() {
     let state = AppState {
         ollama_url: mock_server.uri(),
         validation_mode: ValidationMode::Local,
+        sensitivity: Sensitivity::Medium,
     };
 
     let app = create_app(state);

@@ -25,9 +25,9 @@ impl InputValidationMiddleware {
 
 mod tests {
 
-    use super::*;
+        use super::*;
 
-    use crate::prompt_guard::{PromptGuardClient, ValidationMode};
+        use crate::prompt_guard::{PromptGuardClient, ValidationMode, Sensitivity};
 
 
 
@@ -35,7 +35,7 @@ mod tests {
 
     async fn test_middleware_blocks_malicious() {
 
-        let guard = PromptGuardClient::new("http://mock-ollama", ValidationMode::Remote);
+        let guard = PromptGuardClient::new("http://mock-ollama", ValidationMode::Remote, Sensitivity::Medium);
 
         let middleware = InputValidationMiddleware::new(guard);
 
@@ -59,7 +59,7 @@ mod tests {
 
     async fn test_middleware_allows_safe() {
 
-        let guard = PromptGuardClient::new("http://mock-ollama", ValidationMode::Remote);
+        let guard = PromptGuardClient::new("http://mock-ollama", ValidationMode::Remote, Sensitivity::Medium);
 
         let middleware = InputValidationMiddleware::new(guard);
 

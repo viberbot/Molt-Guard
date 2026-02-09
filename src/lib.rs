@@ -13,22 +13,22 @@ use axum::{
     http::StatusCode,
 };
 use crate::api_types::{ChatCompletionRequest, ChatCompletionResponse, Message, Choice};
-use crate::prompt_guard::{PromptGuardClient, ValidationMode};
+use crate::prompt_guard::{PromptGuardClient, ValidationMode, Sensitivity};
 use crate::middleware::InputValidationMiddleware;
 use crate::secrets_filter::SecretsFilter;
 use crate::pii_filter::PiiFilter;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct AppState {
     pub ollama_url: String,
     pub validation_mode: ValidationMode,
+    pub sensitivity: Sensitivity,
 }
 
 pub fn create_app(state: AppState) -> Router {
     Router::new()
-        .route("/", get(|| async { "Molt Bot Secure Proxy" }))
+        .route("/", get(|| async { "Molt-Guard Secure Proxy" }))
         .route("/health", get(|| async { "OK" }))
         .route("/v1/chat/completions", post(chat_completions_handler))
         .with_state(state)
@@ -52,7 +52,7 @@ async fn chat_completions_handler(
 ) -> Result<Json<ChatCompletionResponse>, (StatusCode, String)> {
     
     // 1. Input Validation
-    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode);
+    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity);
     let middleware = InputValidationMiddleware::new(prompt_guard);
 
     // Extract the latest user message for validation
