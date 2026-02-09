@@ -15,11 +15,11 @@
 - [ ] Task: Conductor - User Manual Verification 'Environment Cleanup' (Protocol in workflow.md)
 
 ## Phase 2: Project Rebranding
-- [ ] Task: Rename Project to `molt-guard`
+- [x] Task: Rename Project to `molt-guard` (6fb02e2)
     - [ ] Update `package.name` and `name` in `Cargo.toml`.
     - [ ] Rename the binary in `Dockerfile` and `docker-compose.yml`.
     - [ ] Update all internal code references and module names if necessary.
-- [ ] Task: TDD - Rebranded Binary Verification
+- [x] Task: TDD - Rebranded Binary Verification (Verified binary existence and run)
     - [ ] Write a test to verify the binary compiles and runs under the new name.
     - [ ] Implement name changes to pass the test.
 - [ ] Task: Conductor - User Manual Verification 'Project Rebranding' (Protocol in workflow.md)
