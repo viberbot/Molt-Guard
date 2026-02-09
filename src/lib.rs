@@ -12,7 +12,7 @@ use axum::{
     extract::State,
     http::StatusCode,
 };
-use crate::api_types::{ChatCompletionRequest, ChatCompletionResponse, Message, Choice};
+use crate::api_types::{ChatCompletionRequest, ChatCompletionResponse, Message, Choice, ListModelsResponse, ModelObject};
 use crate::prompt_guard::{PromptGuardClient, ValidationMode, Sensitivity};
 use crate::middleware::InputValidationMiddleware;
 use crate::secrets_filter::SecretsFilter;
@@ -30,6 +30,7 @@ pub fn create_app(state: AppState) -> Router {
     Router::new()
         .route("/", get(|| async { "Molt-Guard Secure Proxy" }))
         .route("/health", get(|| async { "OK" }))
+        .route("/v1/models", get(list_models_handler))
         .route("/v1/chat/completions", post(chat_completions_handler))
         .with_state(state)
 }
@@ -44,6 +45,45 @@ struct OllamaChatRequest {
 #[derive(Deserialize)]
 struct OllamaChatResponse {
     message: Message,
+    prompt_eval_count: Option<u64>,
+    eval_count: Option<u64>,
+}
+
+async fn list_models_handler(
+    State(state): State<AppState>,
+) -> Result<Json<ListModelsResponse>, (StatusCode, String)> {
+    let client = reqwest::Client::new();
+    let url = format!("{}/api/tags", state.ollama_url);
+
+    let response = client.get(&url)
+        .send()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    #[derive(Deserialize)]
+    struct OllamaTagsResponse {
+        models: Vec<OllamaModel>,
+    }
+
+    #[derive(Deserialize)]
+    struct OllamaModel {
+        name: String,
+    }
+
+    let ollama_tags: OllamaTagsResponse = response.json().await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let models = ollama_tags.models.into_iter().map(|m| ModelObject {
+        id: m.name,
+        object: "model".to_string(),
+        created: 0,
+        owned_by: "ollama".to_string(),
+    }).collect();
+
+    Ok(Json(ListModelsResponse {
+        object: "list".to_string(),
+        data: models,
+    }))
 }
 
 async fn chat_completions_handler(
@@ -72,7 +112,7 @@ async fn chat_completions_handler(
     let ollama_request = OllamaChatRequest {
         model: payload.model.clone(),
         messages: payload.messages,
-        stream: false, // Initially non-streaming for simplicity
+        stream: false,
     };
 
     let response = client.post(&url)
@@ -96,10 +136,20 @@ async fn chat_completions_handler(
     content = secrets_filter.redact(&content);
     content = pii_filter.redact(&content);
 
+    // Populate usage if available
+    let usage = match (ollama_response.prompt_eval_count, ollama_response.eval_count) {
+        (Some(p), Some(e)) => Some(crate::api_types::Usage {
+            prompt_tokens: p,
+            completion_tokens: e,
+            total_tokens: p + e,
+        }),
+        _ => None,
+    };
+
     Ok(Json(ChatCompletionResponse {
-        id: "chatcmpl-proxy".to_string(),
+        id: format!("chatcmpl-{}", uuid::Uuid::new_v4()),
         object: "chat.completion".to_string(),
-        created: 0,
+        created: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs(),
         model: payload.model,
         choices: vec![Choice {
             index: 0,
@@ -109,6 +159,7 @@ async fn chat_completions_handler(
             },
             finish_reason: Some("stop".to_string()),
         }],
-        usage: None,
+        usage,
+        system_fingerprint: None,
     }))
 }

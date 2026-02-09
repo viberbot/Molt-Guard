@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Message {
     pub role: String,
     pub content: String,
@@ -15,9 +15,9 @@ pub struct ChatCompletionRequest {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Usage {
-    pub prompt_tokens: u32,
-    pub completion_tokens: u32,
-    pub total_tokens: u32,
+    pub prompt_tokens: u64,
+    pub completion_tokens: u64,
+    pub total_tokens: u64,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -35,6 +35,22 @@ pub struct ChatCompletionResponse {
     pub model: String,
     pub choices: Vec<Choice>,
     pub usage: Option<Usage>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub system_fingerprint: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ModelObject {
+    pub id: String,
+    pub object: String,
+    pub created: u64,
+    pub owned_by: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ListModelsResponse {
+    pub object: String,
+    pub data: Vec<ModelObject>,
 }
 
 #[cfg(test)]
@@ -79,6 +95,7 @@ mod tests {
                 completion_tokens: 12,
                 total_tokens: 21,
             }),
+            system_fingerprint: None,
         };
         let serialized = serde_json::to_string(&response).unwrap();
         assert!(serialized.contains("Hello there!"));

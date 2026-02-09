@@ -146,3 +146,49 @@ async fn test_openai_proxy_redacts_response() {
     assert!(content.contains("[SECRET_DETECTED]"));
     assert!(!content.contains("12345-ABCDE"));
 }
+
+#[tokio::test]
+async fn test_openai_proxy_list_models() {
+    let mock_server = MockServer::start().await;
+
+    let ollama_response = json!({
+        "models": [
+            {"name": "llama3:latest"},
+            {"name": "phi3:latest"}
+        ]
+    });
+
+    Mock::given(method("GET"))
+        .and(path("/api/tags"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(ollama_response))
+        .mount(&mock_server)
+        .await;
+
+    let state = AppState {
+        ollama_url: mock_server.uri(),
+        validation_mode: ValidationMode::Local,
+        sensitivity: Sensitivity::Medium,
+    };
+
+    let app = create_app(state);
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .method("GET")
+                .uri("/v1/models")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+    
+    let body = axum::body::to_bytes(response.into_body(), 10000).await.unwrap();
+    let body_json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+    
+    assert_eq!(body_json["object"], "list");
+    assert_eq!(body_json["data"][0]["id"], "llama3:latest");
+    assert_eq!(body_json["data"][1]["id"], "phi3:latest");
+}
