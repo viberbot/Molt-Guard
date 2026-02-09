@@ -91,7 +91,10 @@ async fn test_openai_proxy_blocks_malicious() {
         .await
         .unwrap();
 
-    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = axum::body::to_bytes(response.into_body(), 10000).await.unwrap();
+    let body_json: serde_json::Value = serde_json::from_slice(&body).unwrap();
+    assert!(body_json["choices"][0]["message"]["content"].as_str().unwrap().contains("Security Alert"));
 }
 
 #[tokio::test]

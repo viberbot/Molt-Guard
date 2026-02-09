@@ -10,7 +10,7 @@ use axum::{
     Router,
     Json,
     extract::State,
-    http::{StatusCode, Method},
+    http::{StatusCode, Method, HeaderMap},
     response::{Response, IntoResponse},
 };
 use crate::api_types::{ChatCompletionRequest, ChatCompletionResponse, Message, Choice, ListModelsResponse, ModelObject};
@@ -67,27 +67,25 @@ struct OllamaGenerateResponse {
     response: String,
 }
 
-/// Transparently proxy any request not explicitly handled by other routes
 async fn proxy_fallback_handler(
     State(state): State<AppState>,
     method: Method,
     uri: axum::http::Uri,
-    headers: axum::http::HeaderMap,
+    headers: HeaderMap,
     body: axum::body::Body,
 ) -> Result<Response, (StatusCode, String)> {
     let path_query = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("");
     let url = format!("{}{}", state.ollama_url, path_query);
-
+    
     let client = reqwest::Client::new();
     let mut rb = client.request(method, &url);
     
     for (key, value) in headers.iter() {
-        if key != "host" {
+        if key != "host" && key != "content-length" {
             rb = rb.header(key, value);
         }
     }
     
-    // Convert axum Body to Bytes
     let bytes = axum::body::to_bytes(body, 100 * 1024 * 1024).await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -98,7 +96,9 @@ async fn proxy_fallback_handler(
 
     let mut builder = Response::builder().status(res.status());
     for (key, value) in res.headers().iter() {
-        builder = builder.header(key, value);
+        if key != "transfer-encoding" {
+            builder = builder.header(key, value);
+        }
     }
 
     let res_bytes = res.bytes().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -147,18 +147,33 @@ async fn chat_completions_handler(
     Json(payload): Json<ChatCompletionRequest>,
 ) -> Result<Json<ChatCompletionResponse>, (StatusCode, String)> {
     
-    // 1. Input Validation
     let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity);
     let middleware = InputValidationMiddleware::new(prompt_guard);
 
     if let Some(last_message) = payload.messages.last() {
         if last_message.role == "user" {
-            middleware.process(&last_message.content).await
-                .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+            if let Err(e) = middleware.process(&last_message.content).await {
+                // RETURN AS LLM RESPONSE
+                return Ok(Json(ChatCompletionResponse {
+                    id: format!("chatcmpl-{}", uuid::Uuid::new_v4()),
+                    object: "chat.completion".to_string(),
+                    created: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs(),
+                    model: payload.model,
+                    choices: vec![Choice {
+                        index: 0,
+                        message: Message {
+                            role: "assistant".to_string(),
+                            content: format!("🛡️ **Molt-Guard Security Alert**: {}", e),
+                        },
+                        finish_reason: Some("stop".to_string()),
+                    }],
+                    usage: None,
+                    system_fingerprint: None,
+                }));
+            }
         }
     }
 
-    // 2. Forward to Ollama
     let client = reqwest::Client::new();
     let url = format!("{}/api/chat", state.ollama_url);
 
@@ -182,7 +197,6 @@ async fn chat_completions_handler(
     let ollama_response: OllamaChatResponse = response.json().await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    // 3. Output Redaction
     let content = apply_filters(ollama_response.message.content);
 
     let usage = match (ollama_response.prompt_eval_count, ollama_response.eval_count) {
@@ -214,61 +228,82 @@ async fn chat_completions_handler(
 
 async fn ollama_chat_handler(
     State(state): State<AppState>,
+    headers: HeaderMap,
     Json(payload): Json<OllamaChatRequest>,
 ) -> Result<Response, (StatusCode, String)> {
     
-    // 1. Input Validation
     let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity);
     let middleware = InputValidationMiddleware::new(prompt_guard);
 
     if let Some(last_message) = payload.messages.last() {
         if last_message.role == "user" {
-            middleware.process(&last_message.content).await
-                .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+            if let Err(e) = middleware.process(&last_message.content).await {
+                // RETURN AS OLLAMA RESPONSE
+                let ollama_resp = serde_json::json!({
+                    "model": payload.model,
+                    "created_at": "2026-02-09T00:00:00Z",
+                    "message": {
+                        "role": "assistant",
+                        "content": format!("🛡️ **Molt-Guard Security Alert**: {}", e)
+                    },
+                    "done": true
+                });
+                return Ok(Json(ollama_resp).into_response());
+            }
         }
     }
 
-    // 2. Forward to Ollama (Generic Proxy for now to support streaming/etc)
-    proxy_forward(&state.ollama_url, "/api/chat", Method::POST, Json(payload).into_response()).await
+    proxy_forward_json(&state.ollama_url, "/api/chat", Method::POST, headers, &payload).await
 }
 
 async fn ollama_generate_handler(
     State(state): State<AppState>,
+    headers: HeaderMap,
     Json(payload): Json<OllamaGenerateRequest>,
 ) -> Result<Response, (StatusCode, String)> {
     
-    // 1. Input Validation
     let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity);
     let middleware = InputValidationMiddleware::new(prompt_guard);
 
-    middleware.process(&payload.prompt).await
-        .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?;
+    if let Err(e) = middleware.process(&payload.prompt).await {
+        // RETURN AS OLLAMA GENERATE RESPONSE
+        let ollama_resp = serde_json::json!({
+            "model": payload.model,
+            "created_at": "2026-02-09T00:00:00Z",
+            "response": format!("🛡️ **Molt-Guard Security Alert**: {}", e),
+            "done": true
+        });
+        return Ok(Json(ollama_resp).into_response());
+    }
 
-    // 2. Forward to Ollama
-    proxy_forward(&state.ollama_url, "/api/generate", Method::POST, Json(payload).into_response()).await
+    proxy_forward_json(&state.ollama_url, "/api/generate", Method::POST, headers, &payload).await
 }
 
-async fn proxy_forward(base_url: &str, path: &str, method: Method, req_resp: Response) -> Result<Response, (StatusCode, String)> {
+async fn proxy_forward_json<T: Serialize>(base_url: &str, path: &str, method: Method, headers: HeaderMap, payload: &T) -> Result<Response, (StatusCode, String)> {
     let url = format!("{}{}", base_url, path);
     let client = reqwest::Client::new();
     
-    let bytes = axum::body::to_bytes(req_resp.into_body(), 100 * 1024 * 1024).await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    let mut rb = client.request(method, &url);
+    for (key, value) in headers.iter() {
+        if key != "host" && key != "content-length" {
+            rb = rb.header(key, value);
+        }
+    }
 
-    let res = client.request(method, &url)
-        .body(bytes)
+    let res = rb.json(payload)
         .send()
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let mut builder = Response::builder().status(res.status());
     for (key, value) in res.headers().iter() {
-        builder = builder.header(key, value);
+        if key != "transfer-encoding" {
+            builder = builder.header(key, value);
+        }
     }
 
     let res_bytes = res.bytes().await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
     
-    // Apply output filtering if it's a successful response
     let body_str = String::from_utf8_lossy(&res_bytes);
     let redacted_str = apply_filters(body_str.to_string());
     
