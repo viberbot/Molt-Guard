@@ -25,10 +25,11 @@
 - [ ] Task: Conductor - User Manual Verification 'Project Rebranding' (Protocol in workflow.md)
 
 ## Phase 3: Core Feature Enhancements
-- [ ] Task: TDD - Configurable Prompt Guard Sensitivity
+- [x] Task: TDD - Configurable Prompt Guard Sensitivity (ad57997)
     - [ ] Write tests for different sensitivity levels (Low, Medium, High).
     - [ ] Implement the sensitivity logic in `src/prompt_guard.rs`.
-- [ ] Task: TDD - OpenAI API Layer Refinement
+- [~] Task: TDD - OpenAI API Layer Refinement (eee8b4b)
+    - [x] Task: Implement Transparent Proxy Fallback and Secure Ollama-native Endpoints (1bfee6b) (Verified visibility in WebUI)
     - [ ] Write integration tests for standard OpenAI `/v1/chat/completions` endpoints.
     - [ ] Ensure response formats match OpenAI specifications exactly.
 - [ ] Task: Conductor - User Manual Verification 'Core Feature Enhancements' (Protocol in workflow.md)
