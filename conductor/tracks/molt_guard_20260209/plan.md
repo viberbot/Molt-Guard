@@ -1,6 +1,6 @@
 # Implementation Plan: Molt-Guard Rebranding and Professionalization
 
-## Phase 1: Environment Cleanup and Simplification
+## Phase 1: Environment Cleanup and Simplification [checkpoint: b0c226e]
 - [x] Task: Remove Vault Integration (52b8a42)
     - [ ] Remove `vault` service from `docker-compose.yml`.
     - [ ] Remove `vault` related logic and dependencies from `Cargo.toml` and `src/`.
