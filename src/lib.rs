@@ -2,7 +2,6 @@ pub mod prompt_guard;
 pub mod middleware;
 pub mod secrets_filter;
 pub mod pii_filter;
-pub mod vault;
 pub mod api_types;
 pub mod ollama_client;
 
