@@ -1,7 +1,7 @@
-# Product Guidelines: Hardened Molt Bot
+# Product Guidelines: Molt-Guard
 
 ## Interaction Tone & Style
-- **Helpful & Concise:** The assistant should maintain a friendly and supportive demeanor. Security is a foundational pillar but should not overshadow the user experience.
+- **Professional & Reliable:** As a security proxy, Molt-Guard should be invisible unless a violation occurs. Performance and compatibility are paramount.
 - **Unobtrusive Security:** System-level security checks and logs should be secondary to the user's primary interaction loop unless a violation occurs.
 
 ## Security Communication
