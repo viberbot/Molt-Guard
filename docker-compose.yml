@@ -5,7 +5,7 @@ services:
     ports:
       - "3005:3005"
     environment:
-      - OLLAMA_URL=http://ollama-backend.local:11434
+      - OLLAMA_URL=http://backend-ollama:11434
       - VALIDATION_MODE=Remote
     networks:
       - infrastructure

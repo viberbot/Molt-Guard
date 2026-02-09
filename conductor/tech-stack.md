@@ -6,7 +6,7 @@
 - **Project Structure:** Cargo workspace (if applicable) for modularity.
 
 ## AI & Security Integration
-- **LLM Backend:** Ollama (running remotely on 192.168.68.68)
+- **LLM Backend:** Ollama (running remotely on backend-ollama)
 - **Prompt Injection Defense:** Prompt Guard Model (running on Ollama)
     - *Integration:* Rust middleware to validate inputs via Ollama API.
 - **Output Filtering (Secrets):** Rust-native crates / FFI

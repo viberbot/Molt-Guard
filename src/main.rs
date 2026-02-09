@@ -8,7 +8,7 @@ async fn main() -> anyhow::Result<()> {
 
     // Configuration
     let ollama_url = std::env::var("OLLAMA_URL")
-        .unwrap_or_else(|_| "http://192.168.68.68:11434".to_string());
+        .unwrap_or_else(|_| "http://backend-ollama:11434".to_string());
     
     let validation_mode_str = std::env::var("VALIDATION_MODE").unwrap_or_else(|_| "Local".to_string());
     let validation_mode = match validation_mode_str.as_str() {

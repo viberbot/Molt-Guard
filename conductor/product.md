@@ -1,6 +1,6 @@
 # Initial Concept
 
-hey we want to have a hardened molt bot config here that talks to my ollama server running on 192.168.68.68 I don't know if we can also instll the prompt guard model on ollama and if there a way to configure molt to use it for input validation and output filtering.
+hey we want to have a hardened molt bot config here that talks to my ollama server running on backend-ollama I don't know if we can also instll the prompt guard model on ollama and if there a way to configure molt to use it for input validation and output filtering.
 
 # Product Definition: Hardened Molt Bot
 
@@ -13,7 +13,7 @@ A highly secure, personal local LLM assistant powered by Molt and Ollama, specif
 ## Primary Security Goals
 - **Prompt Injection Prevention:** Mitigate jailbreak and injection attempts by leveraging the Prompt Guard model.
 - **Data Exfiltration Prevention:** Implement strict output filtering to detect and block sensitive information (secrets, PII) before it leaves the bot.
-- **Local Sovereignty:** Maintain a strict connection to the local Ollama server (192.168.68.68) to ensure data remains within the private network.
+- **Local Sovereignty:** Maintain a strict connection to the local Ollama server (backend-ollama) to ensure data remains within the private network.
 
 ## Key Features
 - **Prompt Guard Integration:** Automated setup of the Prompt Guard model on the remote Ollama server and middleware to validate user inputs.
