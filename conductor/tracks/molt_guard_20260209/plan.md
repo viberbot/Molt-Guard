@@ -24,7 +24,7 @@
     - [ ] Implement name changes to pass the test.
 - [ ] Task: Conductor - User Manual Verification 'Project Rebranding' (Protocol in workflow.md)
 
-## Phase 3: Core Feature Enhancements
+## Phase 3: Core Feature Enhancements [checkpoint: fb44dde]
 - [x] Task: TDD - Configurable Prompt Guard Sensitivity (ad57997)
     - [ ] Write tests for different sensitivity levels (Low, Medium, High).
     - [ ] Implement the sensitivity logic in `src/prompt_guard.rs`.
