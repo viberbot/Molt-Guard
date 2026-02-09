@@ -14,7 +14,7 @@
     - [ ] Ensure `.env` and local data directories are in `.gitignore`.
 - [ ] Task: Conductor - User Manual Verification 'Environment Cleanup' (Protocol in workflow.md)
 
-## Phase 2: Project Rebranding
+## Phase 2: Project Rebranding [checkpoint: 09772f4]
 - [x] Task: Rename Project to `molt-guard` (6fb02e2)
     - [ ] Update `package.name` and `name` in `Cargo.toml`.
     - [ ] Rename the binary in `Dockerfile` and `docker-compose.yml`.
