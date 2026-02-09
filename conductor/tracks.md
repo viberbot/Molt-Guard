@@ -14,5 +14,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [~] **Track: Project Professionalization and "Molt-Guard" Rebranding**
-*Link: [./tracks/molt_guard_20260209/](./molt_guard_20260209/)*
+- [x] **Track: Project Professionalization and "Molt-Guard" Rebranding**
+*Link: [./tracks/molt_guard_20260209/](./tracks/molt_guard_20260209/)*
