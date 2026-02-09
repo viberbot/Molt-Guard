@@ -9,7 +9,7 @@
     - [ ] Replace all instances of `192.168.68.68` with a generic environment variable `OLLAMA_URL`.
     - [ ] Update `docker-compose.yml` to use `OLLAMA_URL=http://backend-ollama:11434`.
     - [ ] Create `.env.example` with placeholders for all configurable variables.
-- [~] Task: Sanitize Git History
+- [x] Task: Sanitize Git History (1be5c4f)
     - [ ] Use `git-filter-repo` or similar to scrub local IPs and private tokens from history.
     - [ ] Ensure `.env` and local data directories are in `.gitignore`.
 - [ ] Task: Conductor - User Manual Verification 'Environment Cleanup' (Protocol in workflow.md)
