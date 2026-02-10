@@ -26,6 +26,7 @@ pub struct AppState {
     pub validation_mode: ValidationMode,
     pub sensitivity: Sensitivity,
     pub guard_model: String,
+    pub http_client: reqwest::Client,
 }
 
 pub fn create_app(state: AppState) -> Router {
@@ -80,8 +81,7 @@ async fn proxy_fallback_handler(
     
     println!(">>> PROXY FALLBACK: {} {} -> {}", method, path_query, url);
 
-    let client = reqwest::Client::new();
-    let mut rb = client.request(method, &url);
+    let mut rb = state.http_client.request(method, &url);
     
     for (key, value) in headers.iter() {
         if key != "host" && key != "content-length" {
@@ -100,7 +100,10 @@ async fn proxy_fallback_handler(
             (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
         })?;
 
-    let mut builder = Response::builder().status(res.status());
+    let status = res.status();
+    println!("<<< PROXY RESPONSE: {} {}", status, path_query);
+
+    let mut builder = Response::builder().status(status);
     for (key, value) in res.headers().iter() {
         if key != "transfer-encoding" {
             builder = builder.header(key, value);
@@ -114,10 +117,9 @@ async fn proxy_fallback_handler(
 async fn list_models_handler(
     State(state): State<AppState>,
 ) -> Result<Json<ListModelsResponse>, (StatusCode, String)> {
-    let client = reqwest::Client::new();
     let url = format!("{}/api/tags", state.ollama_url);
 
-    let response = client.get(&url)
+    let response = state.http_client.get(&url)
         .send()
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -153,7 +155,7 @@ async fn chat_completions_handler(
     Json(payload): Json<ChatCompletionRequest>,
 ) -> Result<Json<ChatCompletionResponse>, (StatusCode, String)> {
     
-    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity, &state.guard_model);
+    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity, &state.guard_model, state.http_client.clone());
     let middleware = InputValidationMiddleware::new(prompt_guard);
 
     if let Some(last_message) = payload.messages.last() {
@@ -186,7 +188,6 @@ async fn chat_completions_handler(
         }
     }
 
-    let client = reqwest::Client::new();
     let url = format!("{}/api/chat", state.ollama_url);
 
     let ollama_request = OllamaChatRequest {
@@ -195,7 +196,7 @@ async fn chat_completions_handler(
         stream: false,
     };
 
-    let response = client.post(&url)
+    let response = state.http_client.post(&url)
         .json(&ollama_request)
         .send()
         .await
@@ -244,7 +245,7 @@ async fn ollama_chat_handler(
     Json(payload): Json<OllamaChatRequest>,
 ) -> Result<Response, (StatusCode, String)> {
     
-    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity, &state.guard_model);
+    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity, &state.guard_model, state.http_client.clone());
     let middleware = InputValidationMiddleware::new(prompt_guard);
 
     if let Some(last_message) = payload.messages.last() {
@@ -271,7 +272,7 @@ async fn ollama_chat_handler(
         }
     }
 
-    proxy_forward_json(&state.ollama_url, "/api/chat", Method::POST, headers, &payload).await
+    proxy_forward_json(&state.http_client, &state.ollama_url, "/api/chat", Method::POST, headers, &payload).await
 }
 
 async fn ollama_generate_handler(
@@ -280,7 +281,7 @@ async fn ollama_generate_handler(
     Json(payload): Json<OllamaGenerateRequest>,
 ) -> Result<Response, (StatusCode, String)> {
     
-    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity, &state.guard_model);
+    let prompt_guard = PromptGuardClient::new(&state.ollama_url, state.validation_mode, state.sensitivity, &state.guard_model, state.http_client.clone());
     let middleware = InputValidationMiddleware::new(prompt_guard);
 
     if let Err(e) = middleware.process(&payload.prompt).await {
@@ -300,12 +301,11 @@ async fn ollama_generate_handler(
         return Ok(Json(ollama_resp).into_response());
     }
 
-    proxy_forward_json(&state.ollama_url, "/api/generate", Method::POST, headers, &payload).await
+    proxy_forward_json(&state.http_client, &state.ollama_url, "/api/generate", Method::POST, headers, &payload).await
 }
 
-async fn proxy_forward_json<T: Serialize>(base_url: &str, path: &str, method: Method, headers: HeaderMap, payload: &T) -> Result<Response, (StatusCode, String)> {
+async fn proxy_forward_json<T: Serialize>(client: &reqwest::Client, base_url: &str, path: &str, method: Method, headers: HeaderMap, payload: &T) -> Result<Response, (StatusCode, String)> {
     let url = format!("{}{}", base_url, path);
-    let client = reqwest::Client::new();
     
     let mut rb = client.request(method, &url);
     for (key, value) in headers.iter() {

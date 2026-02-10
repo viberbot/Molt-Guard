@@ -30,9 +30,18 @@ impl OllamaClient {
         }
     }
 
+    pub fn new_with_client(base_url: &str, http_client: reqwest::Client) -> Self {
+        Self {
+            base_url: base_url.to_string(),
+            http_client,
+        }
+    }
+
     pub async fn check_model_exists(&self, model_name: &str) -> Result<bool> {
         let url = format!("{}/api/tags", self.base_url);
-        let response = self.http_client.get(&url).send().await?;
+        let response = self.http_client.get(&url)
+            .timeout(std::time::Duration::from_secs(5))
+            .send().await?;
         
         if !response.status().is_success() {
             return Err(anyhow::anyhow!("Failed to list models: {}", response.status()));

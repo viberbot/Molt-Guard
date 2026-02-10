@@ -47,6 +47,7 @@ pub struct PromptGuardClient {
     sensitivity: Sensitivity,
     guard_model: GuardModel,
     model_name: String,
+    http_client: reqwest::Client,
 }
 
 #[derive(Serialize)]
@@ -62,7 +63,7 @@ struct OllamaGenerateResponse {
 }
 
 impl PromptGuardClient {
-    pub fn new(base_url: &str, mode: ValidationMode, sensitivity: Sensitivity, model_name: &str) -> Self {
+    pub fn new(base_url: &str, mode: ValidationMode, sensitivity: Sensitivity, model_name: &str, http_client: reqwest::Client) -> Self {
         let guard_model = GuardModel::from_str(model_name).unwrap_or(GuardModel::GraniteGuardian);
         Self {
             base_url: base_url.to_string(),
@@ -70,6 +71,7 @@ impl PromptGuardClient {
             sensitivity,
             guard_model,
             model_name: model_name.to_string(),
+            http_client,
         }
     }
 
@@ -96,7 +98,6 @@ impl PromptGuardClient {
     }
 
     async fn validate_remote(&self, prompt: &str) -> Result<()> {
-        let client = reqwest::Client::new();
         let url = format!("{}/api/generate", self.base_url);
         
         let full_prompt = match self.guard_model {
@@ -115,7 +116,7 @@ impl PromptGuardClient {
             return self.validate_local(prompt);
         }
 
-        let response = client.post(&url)
+        let response = self.http_client.post(&url)
             .json(&request)
             .send()
             .await?;
@@ -165,7 +166,7 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let client = PromptGuardClient::new(&mock_server.uri(), ValidationMode::Remote, Sensitivity::Medium, "granite3-guardian");
+        let client = PromptGuardClient::new(&mock_server.uri(), ValidationMode::Remote, Sensitivity::Medium, "granite3-guardian", reqwest::Client::new());
         let result = client.validate("some prompt").await;
         assert!(result.is_err());
     }
@@ -179,7 +180,7 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let client = PromptGuardClient::new(&mock_server.uri(), ValidationMode::Remote, Sensitivity::Medium, "shieldgemma");
+        let client = PromptGuardClient::new(&mock_server.uri(), ValidationMode::Remote, Sensitivity::Medium, "shieldgemma", reqwest::Client::new());
         let result = client.validate("some prompt").await;
         assert!(result.is_err());
     }

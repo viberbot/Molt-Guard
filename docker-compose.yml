@@ -5,9 +5,10 @@ services:
     ports:
       - "11434:3005"
     environment:
-      - OLLAMA_URL=http://192.168.68.68:11434
-      - VALIDATION_MODE=Remote
-      - PROMPT_SENSITIVITY=Medium
+      - OLLAMA_URL=${OLLAMA_URL}
+      - VALIDATION_MODE=${VALIDATION_MODE:-Remote}
+      - PROMPT_SENSITIVITY=${PROMPT_SENSITIVITY:-Medium}
+      - GUARD_MODEL=${GUARD_MODEL:-granite3-guardian:latest}
     networks:
       - infrastructure
     read_only: true
@@ -17,11 +18,16 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    restart: always
     deploy:
       resources:
         limits:
           cpus: '0.50'
-          memory: 512M
+          memory: 1024M
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
 
 networks:
   infrastructure:

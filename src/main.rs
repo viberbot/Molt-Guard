@@ -30,11 +30,17 @@ async fn main() -> anyhow::Result<()> {
     let guard_model = std::env::var("GUARD_MODEL").unwrap_or_else(|_| "granite3-guardian:latest".to_string());
     println!("Guard Model: {}", guard_model);
 
+    // Initialize pooled HTTP client
+    let http_client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(300))
+        .build()?;
+
     // Run model presence check in the background
     let ollama_url_clone = ollama_url.clone();
     let guard_model_clone = guard_model.clone();
+    let http_client_clone = http_client.clone();
     tokio::spawn(async move {
-        let client = OllamaClient::new(&ollama_url_clone);
+        let client = OllamaClient::new_with_client(&ollama_url_clone, http_client_clone);
         if let Err(e) = client.ensure_model_exists(&guard_model_clone).await {
             eprintln!("Warning: Failed to ensure guard model '{}' exists: {}", guard_model_clone, e);
         } else {
@@ -47,6 +53,7 @@ async fn main() -> anyhow::Result<()> {
         validation_mode,
         sensitivity,
         guard_model,
+        http_client,
     };
 
     // Define the app routes
